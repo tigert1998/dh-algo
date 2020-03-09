@@ -22,7 +22,7 @@ class BigInteger {
 
   void Debug() const;
 
-  void Carry();
+  void Carry(bool);
 
   int CompareAbs(const BigInteger &) const;
   static void LowPrecDivAbs(const BigInteger &, const BigInteger &,
@@ -38,6 +38,7 @@ class BigInteger {
   BigInteger();
   explicit BigInteger(int);
   BigInteger(const BigInteger &);
+  bool operator==(const BigInteger &) const;
 
   BigInteger Add(const BigInteger &) const;
   BigInteger Sub(const BigInteger &) const;

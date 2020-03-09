@@ -87,7 +87,7 @@ int BigInteger::CompareAbs(const BigInteger &o) const {
 
 BigInteger::BigInteger() : BigInteger(0) {}
 
-void BigInteger::Carry() {
+void BigInteger::Carry(bool shrink) {
   for (int i = 0; i < mem_.size() - 1; i++) {
     if (mem_[i] < 0) {
       mem_[i] += kMax;
@@ -95,10 +95,12 @@ void BigInteger::Carry() {
     }
   }
 
-  int len = mem_.size();
-  while (mem_[len - 1] == 0) len--;
-  len = std::max(len, 1);
-  mem_.resize(len);
+  if (shrink) {
+    int len = mem_.size();
+    while (mem_[len - 1] == 0) len--;
+    len = std::max(len, 1);
+    mem_.resize(len);
+  }
 
   int i = 0;
   while (i < mem_.size()) {
@@ -117,7 +119,7 @@ BigInteger::BigInteger(int value) {
   is_positive_ = value >= 0;
   mem_.resize(1);
   mem_[0] = std::abs(value);
-  Carry();
+  Carry(true);
 }
 
 BigInteger::BigInteger(const BigInteger &) = default;
@@ -137,7 +139,7 @@ BigInteger &BigInteger::AddAbsWithSideEffect(const BigInteger &o) {
     mem_[i] += o.mem_[i];
   }
 
-  Carry();
+  Carry(true);
 
   return *this;
 }
@@ -147,7 +149,7 @@ BigInteger &BigInteger::SubAbsWithSideEffect(const BigInteger &o) {
     mem_[i] -= o.mem_[i];
   }
 
-  Carry();
+  Carry(true);
 
   return *this;
 }
@@ -206,9 +208,10 @@ BigInteger BigInteger::Mul(const BigInteger &o) const {
     for (int j = 0; j < o.mem_.size(); j++) {
       ans.mem_[i + j] += mem_[i] * o.mem_[j];
     }
+    ans.Carry(false);
   }
+  ans.Carry(true);
 
-  ans.Carry();
   ans.is_positive_ = is_positive_ == o.is_positive_;
   return ans;
 }
@@ -229,21 +232,36 @@ void BigInteger::LowPrecDivAbs(const BigInteger &a, const BigInteger &b,
     }
   }
   *div = l;
-  *mod = a;
   mod->SubAbsWithSideEffect(b.Mul(BigInteger(*div)));
   mod->is_positive_ = true;
+}
+
+bool BigInteger::operator==(const BigInteger &o) const {
+  if (mem_.size() != o.mem_.size()) {
+    return false;
+  }
+  for (int i = 0; i < mem_.size(); i++)
+    if (mem_[i] != o.mem_[i]) return false;
+  if (is_positive_ != o.is_positive_) {
+    if (mem_[0] == 0 && mem_.size() == 1) return true;
+    return false;
+  }
+  return true;
 }
 
 DivResult BigInteger::Div(const BigInteger &o) const {
   BigInteger div, mod;
 
+  auto kMaxBigInt = BigInteger(kMax);
+
   mod = BigInteger(0);
   div.mem_.resize(mem_.size());
   for (int i = 0; i < mem_.size(); i++) {
-    mod = mod.Mul(BigInteger(kMax)).Add(BigInteger(*(mem_.end() - i - 1)));
+    mod = mod.Mul(kMaxBigInt).Add(BigInteger(*(mem_.end() - i - 1)));
     LowPrecDivAbs(mod, o, &div.mem_[div.mem_.size() - i - 1], &mod);
   }
-  div.Carry();
+  div.Carry(true);
+  mod.Carry(true);
 
   if (is_positive_ != o.is_positive_) {
     div.is_positive_ = false;

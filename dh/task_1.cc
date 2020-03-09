@@ -1,7 +1,5 @@
 #include "big_integer.h"
 
-#include <sstream>
-
 BigInteger a, b;
 
 int main() {
