@@ -97,8 +97,7 @@ void BigInteger::Carry(bool shrink) {
 
   if (shrink) {
     int len = mem_.size();
-    while (mem_[len - 1] == 0) len--;
-    len = std::max(len, 1);
+    while (len >= 2 && mem_[len - 1] == 0) len--;
     mem_.resize(len);
   }
 

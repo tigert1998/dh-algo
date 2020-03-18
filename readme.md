@@ -7,8 +7,8 @@
 ## Build
 
 ```
-bazel build dh:task_1
-bazel build dh:task_2
+bazel build -c opt dh:task_1
+bazel build -c opt dh:task_2
 ```
 
 ## Run
