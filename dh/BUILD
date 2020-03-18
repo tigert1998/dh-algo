@@ -17,3 +17,12 @@ cc_binary(
     copts = [],
     deps = [":big_integer"],
 )
+
+cc_test(
+    name = "big_integer_test",
+    srcs = ["big_integer_test.cc"],
+    deps = [
+        ":big_integer",
+        "@googletest//:gtest_main"
+    ]
+)
